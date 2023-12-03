@@ -17,6 +17,7 @@ pub enum EnginePart {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct EnginePartNumber {
+    pub original_position: Position,
     pub value: u32,
     pub length: u8,
 }
@@ -28,11 +29,13 @@ pub fn parse(input: &str) -> EnginePartMap {
     let mut map = EnginePartMap::new();
 
     input.lines().enumerate().for_each(|(y, line)| {
+        let y = y as u8;
+
         let mut x = 0;
         let mut input = line;
 
-        while let Ok((remaining, engine_part)) = parse_line(input) {
-            map.insert((x, y as u8), engine_part);
+        while let Ok((remaining, engine_part)) = parse_line(input, x, y) {
+            map.insert((x, y), engine_part);
 
             match engine_part {
                 EnginePart::Number(part) => x += part.length as u8,
@@ -45,11 +48,12 @@ pub fn parse(input: &str) -> EnginePartMap {
     map
 }
 
-fn parse_line(input: &str) -> IResult<&str, EnginePart> {
+fn parse_line(input: &str, x: u8, y: u8) -> IResult<&str, EnginePart> {
     let (input, part) = alt((
         map(tag("."), |_| EnginePart::Period),
         map(digit1, |n: &str| {
             EnginePart::Number(EnginePartNumber {
+                original_position: (x, y),
                 value: n.parse::<u32>().unwrap(),
                 length: n.len() as u8,
             })
