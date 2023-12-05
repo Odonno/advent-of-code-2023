@@ -9,6 +9,7 @@ use nom::{
     multi::separated_list1,
     IResult,
 };
+use rayon::prelude::*;
 
 pub type SeedValue = u64;
 
@@ -164,36 +165,41 @@ pub fn get_min_location(seed_details: Vec<SeedDetails>, categories: Vec<Category
         .clone();
 
     let locations = seed_details
-        .into_iter()
+        .into_par_iter()
         .map(|seed_detail| {
-            let mut minimum = None;
+            let values = (seed_detail.value..(seed_detail.value + seed_detail.length as u64))
+                .collect_vec()
+                .par_chunks(100_000)
+                .into_par_iter()
+                .map(|chunk| {
+                    let values = chunk.into_iter().map(|seed| {
+                        let source = seed;
+                        let source = apply_category(&category1, &source);
+                        let source = apply_category(&category2, &source);
+                        let source = apply_category(&category3, &source);
+                        let source = apply_category(&category4, &source);
+                        let source = apply_category(&category5, &source);
+                        let source = apply_category(&category6, &source);
+                        let source = apply_category(&category7, &source);
 
-            for seed in seed_detail.value..(seed_detail.value + seed_detail.length as u64) {
-                let source = seed;
-                let source = apply_category(&category1, source);
-                let source = apply_category(&category2, source);
-                let source = apply_category(&category3, source);
-                let source = apply_category(&category4, source);
-                let source = apply_category(&category5, source);
-                let source = apply_category(&category6, source);
-                let source = apply_category(&category7, source);
+                        source
+                    });
 
-                if minimum.is_none() || source < minimum.unwrap() {
-                    minimum = Some(source);
-                }
-            }
+                    values.min().unwrap()
+                })
+                .collect::<Vec<_>>();
 
-            minimum.unwrap()
+            values.into_iter().min().unwrap()
         })
-        .collect_vec();
+        .collect::<Vec<_>>();
 
-    locations.iter().min().unwrap().clone()
+    locations.into_iter().min().unwrap().clone()
 }
 
-pub fn apply_category(category: &Category, source: SeedValue) -> SeedValue {
+pub fn apply_category(category: &Category, source: &SeedValue) -> SeedValue {
     for range in category.ranges.iter() {
         let is_source_in_range =
-            range.source_start <= source && source <= (range.source_start + range.length - 1);
+            range.source_start <= *source && *source <= (range.source_start + range.length - 1);
 
         if is_source_in_range {
             let distance = source - range.source_start;
@@ -201,5 +207,5 @@ pub fn apply_category(category: &Category, source: SeedValue) -> SeedValue {
         }
     }
 
-    source
+    *source
 }
