@@ -1,7 +1,13 @@
 use super::common::*;
 
-pub fn run(input: &str) {
-    let values = parse(input);
+pub fn run(input: &str, use_sample: bool) {
+    let races = parse(input);
 
-    println!("{:?}", values);
+    let value = get_total_ways(races);
+
+    if use_sample {
+        assert_eq!(value, 288);
+    } else {
+        println!("{:?}", value);
+    }
 }
