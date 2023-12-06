@@ -65,24 +65,15 @@ fn parse_input_part2(input: &str) -> IResult<&str, Race> {
 }
 
 pub fn get_total_ways(races: Vec<Race>) -> u64 {
-    let mut ways_per_race = Vec::new();
+    races.into_iter().map(calculate_ways).product::<_>()
+}
 
-    for race in races {
-        let mut ways = 0;
+fn calculate_ways(race: Race) -> u64 {
+    let delta = u64::pow(race.time as u64, 2) - (4 * race.distance);
+    let delta = (delta as f64).sqrt();
 
-        for hold_time in 0..race.time {
-            let speed = hold_time as u64;
-            let duration = (race.time - hold_time) as u64;
+    let x1 = (-(race.time as f64) + delta) / -2f64;
+    let x2 = (-(race.time as f64) - delta) / -2f64;
 
-            let total_distance = speed * duration;
-
-            if total_distance > race.distance {
-                ways += 1;
-            }
-        }
-
-        ways_per_race.push(ways);
-    }
-
-    ways_per_race.iter().product::<_>()
+    (x2.ceil() - x1.floor()) as u64 - 1
 }
