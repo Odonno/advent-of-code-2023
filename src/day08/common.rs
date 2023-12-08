@@ -89,3 +89,36 @@ fn parse_node(input: &str) -> IResult<&str, (&str, (&str, &str))> {
 
     Ok((input, (start, (left, right))))
 }
+
+pub fn count_steps_to_end(input: &Input, start_node: &str, end_nodes: Vec<&str>) -> u32 {
+    let mut current_node = start_node;
+    let mut steps = 0;
+
+    loop {
+        for index in 0..input.instructions.len() {
+            let instruction = input.instructions.get(index).unwrap();
+            let node: &NodeInstructions = input.nodes.get(current_node).unwrap();
+
+            match instruction {
+                Instruction::Left => {
+                    current_node = &node.left;
+                }
+                Instruction::Right => {
+                    current_node = &node.right;
+                }
+            }
+
+            steps += 1;
+
+            if end_nodes.contains(&current_node) {
+                break;
+            }
+        }
+
+        if end_nodes.contains(&current_node) {
+            break;
+        }
+    }
+
+    steps
+}
