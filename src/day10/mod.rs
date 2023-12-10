@@ -8,7 +8,11 @@ const DAY: u8 = 10;
 
 pub fn run(part: u8, use_sample: bool) {
     let input = if use_sample {
-        include_str!("sample.txt")
+        match part {
+            1 => include_str!("sample-1.txt"),
+            2 => include_str!("sample-2.txt"),
+            _ => panic!("Invalid part number"),
+        }
     } else {
         include_str!("input.txt")
     };
@@ -16,11 +20,11 @@ pub fn run(part: u8, use_sample: bool) {
     match part {
         1 => {
             display_info(DAY, part, use_sample);
-            part1::run(input);
+            part1::run(input, use_sample);
         }
         2 => {
             display_info(DAY, part, use_sample);
-            part2::run(input);
+            part2::run(input, use_sample);
         }
         _ => panic!("Invalid part number"),
     }
